@@ -375,7 +375,6 @@
 
     <!-- Firebase configuration & Spooky Engine -->
     <script type="module">
-        // Import the necessary modules from Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -389,12 +388,28 @@
             hasTriggeredScreamer: false
         };
 
-        // Initialize Firebase Integration
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'spooky-candles';
+        // Resilient Firebase config check (Double-mode auto-switch)
+        let firebaseApp = null;
+        let auth = null;
+        let db = null;
+        let useFirebase = false;
+        let appId = 'spooky-candles';
+
+        try {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                const firebaseConfig = typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
+                firebaseApp = initializeApp(firebaseConfig);
+                auth = getAuth(firebaseApp);
+                db = getFirestore(firebaseApp);
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'spooky-candles';
+                useFirebase = true;
+                console.log("Firebase 雲端連線模組啟動。");
+            } else {
+                console.warn("未偵測到雲端設定，自動轉向：本地安全儀式模式 (Local Storage Mode)。");
+            }
+        } catch (e) {
+            console.error("Firebase 初始化失敗，自動切換至本地模式:", e);
+        }
 
         let currentUser = null;
         let previousLitCount = null;
@@ -421,8 +436,13 @@
             }, 4200);
         }
 
-        // Initialize Auth system (Priority: Custom token -> Anonymous)
+        // Initialize Auth system (Priority: Custom token -> Anonymous -> Local mode fallback)
         async function initAuth() {
+            if (!useFirebase) {
+                setupLocalMode();
+                return;
+            }
+
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -431,40 +451,104 @@
                 }
             } catch (error) {
                 console.error("Auth Failed:", error);
-                showSystemMessage("儀式印記連線失敗，正在重試...");
+                showSystemMessage("網路連接邊緣失敗，自動切換至本地儀式。");
+                setupLocalMode();
             }
         }
 
-        // Monitor connection auth states
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
+        // Setup local mode if Firebase isn't present (Allows copy-paste, double-click local play)
+        function setupLocalMode() {
+            useFirebase = false;
             const statusDot = document.getElementById('user-status-dot');
             const statusText = document.getElementById('user-status-text');
             const connectionId = document.getElementById('user-connection-id');
 
-            if (user) {
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse";
-                statusText.textContent = "儀式連線已穩固";
-                connectionId.textContent = user.uid;
-                
-                // Begin listening to real-time database
-                startCandleSync();
-            } else {
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse";
-                statusText.textContent = "與陰陽邊界失聯";
-                connectionId.textContent = "未連線";
+            statusDot.className = "w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse";
+            statusText.textContent = "本地孤立祭壇已穩固 (Local)";
+            
+            // Generate or fetch a unique local persistent key
+            let localSoul = localStorage.getItem('spooky_candles_user_uid');
+            if (!localSoul) {
+                localSoul = "SOUL_" + Math.random().toString(36).substring(2, 9).toUpperCase();
+                localStorage.setItem('spooky_candles_user_uid', localSoul);
             }
-        });
+            connectionId.textContent = localSoul;
+            
+            // Register as local current user
+            currentUser = { uid: localSoul };
 
-        // Sync Firestore Candles Real-time (Rule 1 & Rule 2 compliant)
+            // Load candles from localStorage
+            loadLocalCandles();
+        }
+
+        // Load local candles data
+        function loadLocalCandles() {
+            const localData = localStorage.getItem('spooky_candles_data');
+            if (localData) {
+                try {
+                    state.candles = JSON.parse(localData);
+                } catch(e) {
+                    console.error("解析本地蠟燭紀錄失敗:", e);
+                    initDefaultCandles();
+                }
+            } else {
+                initDefaultCandles();
+            }
+            renderCandles();
+            updateStoriesBoard();
+
+            // Set up initial lit count for state tracking
+            const currentLitCount = state.candles.filter(c => c.isLit).length;
+            previousLitCount = currentLitCount;
+        }
+
+        // Initialize default candles in Local Storage
+        function initDefaultCandles() {
+            state.candles = Array.from({ length: 10 }, (_, i) => ({
+                id: i + 1,
+                isLit: true,
+                story: null,
+                timestamp: null,
+                authorId: null
+            }));
+            saveLocalCandles();
+        }
+
+        // Save candles state locally
+        function saveLocalCandles() {
+            localStorage.setItem('spooky_candles_data', JSON.stringify(state.candles));
+        }
+
+        // Monitor connection auth states for Cloud Mode
+        if (useFirebase && auth) {
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                const statusDot = document.getElementById('user-status-dot');
+                const statusText = document.getElementById('user-status-text');
+                const connectionId = document.getElementById('user-connection-id');
+
+                if (user) {
+                    statusDot.className = "w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse";
+                    statusText.textContent = "全球連線祭壇已穩固 (Cloud)";
+                    connectionId.textContent = user.uid;
+                    
+                    // Begin listening to real-time database
+                    startCandleSync();
+                } else {
+                    statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse";
+                    statusText.textContent = "與陰陽邊界失聯";
+                    connectionId.textContent = "未連線";
+                }
+            });
+        }
+
+        // Sync Firestore Candles Real-time
         function startCandleSync() {
-            if (!currentUser) return;
+            if (!currentUser || !useFirebase) return;
 
-            // Fetch public data collection without complex queries (Rule 1 & Rule 2)
             const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'candle_stories');
             
             onSnapshot(collectionRef, (snapshot) => {
-                // Initialize fallback candles array
                 const syncedCandles = Array.from({ length: 10 }, (_, i) => ({
                     id: i + 1,
                     isLit: true,
@@ -495,10 +579,7 @@
 
                 const currentLitCount = syncedCandles.filter(c => c.isLit).length;
 
-                // Jump scare trigger conditions:
-                // 1. We had some candles lit previously (not a fresh reload where everything is already dark)
-                // 2. Currently all candles are extinguished
-                // 3. User is already looking at the main board (welcome overlay is gone)
+                // Jump scare trigger conditions
                 const isMainContentVisible = !document.getElementById('main-content').classList.contains('hidden');
                 
                 if (previousLitCount !== null && previousLitCount > 0 && currentLitCount === 0 && !state.hasTriggeredScreamer && isMainContentVisible) {
@@ -510,7 +591,8 @@
 
             }, (error) => {
                 console.error("Firestore synchronizer failed:", error);
-                showSystemMessage("無法讀取遠端魂火，請檢查網路連線。");
+                showSystemMessage("無法讀取遠端魂火，自動轉為本地模式。");
+                setupLocalMode();
             });
         }
 
@@ -634,7 +716,7 @@
 
                 const screamGain = audioCtx.createGain();
                 screamGain.gain.setValueAtTime(0.01, now);
-                screamGain.gain.exponentialRampToValueAtTime(0.9, now + 0.05); // Screaming Volume!
+                screamGain.gain.exponentialRampToValueAtTime(0.9, now + 0.05);
                 screamGain.gain.exponentialRampToValueAtTime(0.1, now + 1.2);
                 screamGain.gain.linearRampToValueAtTime(0.001, now + 2.0);
 
@@ -780,10 +862,10 @@
             document.getElementById('char-count').textContent = len;
         });
 
-        // Submit story handler (Rule 3 protected: guards database write with user authorization check)
+        // Submit story handler (Dual-mode write safety)
         document.getElementById('submit-story-btn').addEventListener('click', async function() {
             if (!currentUser) {
-                showSystemMessage("儀式連線不穩定，無法提交。請重新整理。");
+                showSystemMessage("儀式印記不穩定，無法提交。請重試。");
                 return;
             }
 
@@ -809,22 +891,45 @@
             playBlowoutSound();
             triggerSmokePuff(candleId);
 
-            // Write to Firestore (Rule 1 & Rule 3 Compliant)
-            try {
-                const now = new Date();
-                const formattedTime = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-                
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'candle_stories', candleId.toString());
-                await setDoc(docRef, {
+            const now = new Date();
+            const formattedTime = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+            if (useFirebase) {
+                // Write to Firestore
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'candle_stories', candleId.toString());
+                    await setDoc(docRef, {
+                        isLit: false,
+                        story: storyText,
+                        timestamp: formattedTime,
+                        authorId: currentUser.uid
+                    });
+                    showSystemMessage(`第 ${candleId} 根蠟燭已被吹熄，怪談成功封印至雲端。`);
+                } catch (err) {
+                    console.error("Story commit to cloud database failed:", err);
+                    showSystemMessage("寫入魂魄深淵時失敗，請重試。");
+                }
+            } else {
+                // Write to Local Storage State
+                state.candles[candleId - 1] = {
+                    id: candleId,
                     isLit: false,
                     story: storyText,
                     timestamp: formattedTime,
                     authorId: currentUser.uid
-                });
-                showSystemMessage(`第 ${candleId} 根蠟燭已被吹熄，怪談成功封印。`);
-            } catch (err) {
-                console.error("Story commit to database failed:", err);
-                showSystemMessage("寫入魂魄深淵時失敗，請重試。");
+                };
+                saveLocalCandles();
+                renderCandles();
+                updateStoriesBoard();
+                showSystemMessage(`第 ${candleId} 根蠟燭已被吹熄，怪談封印已存在本地儀式中。`);
+
+                // Check local jumpscare trigger
+                const currentLitCount = state.candles.filter(c => c.isLit).length;
+                if (previousLitCount > 0 && currentLitCount === 0 && !state.hasTriggeredScreamer) {
+                    state.hasTriggeredScreamer = true;
+                    setTimeout(triggerJumpScare, 1200);
+                }
+                previousLitCount = currentLitCount;
             }
         });
 
@@ -883,7 +988,7 @@
             });
         }
 
-        // Trigger Jump Scare (Now terminates shaking exactly after 5 seconds!)
+        // Trigger Jump Scare (Terminates shaking exactly after 5 seconds!)
         function triggerJumpScare() {
             if (windGain) {
                 windGain.gain.setValueAtTime(0, audioCtx.currentTime);
@@ -1020,36 +1125,51 @@
 
             showSystemMessage("正在向深淵重組祭壇，請稍候...");
 
-            try {
-                // Wipe states in firestore (Loop 1-10 sequentially, Rule 2 clean architecture compliant)
-                for (let i = 1; i <= 10; i++) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'candle_stories', i.toString());
-                    await setDoc(docRef, {
-                        isLit: true,
-                        story: null,
-                        timestamp: null,
-                        authorId: null
-                    });
+            if (useFirebase) {
+                try {
+                    // Wipe states in firestore (Loop 1-10 sequentially)
+                    for (let i = 1; i <= 10; i++) {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'candle_stories', i.toString());
+                        await setDoc(docRef, {
+                            isLit: true,
+                            story: null,
+                            timestamp: null,
+                            authorId: null
+                        });
+                    }
+                } catch (err) {
+                    console.error("Failed to reset database candles:", err);
+                    showSystemMessage("雲端祭壇重組失敗，請確認連線。");
+                    return;
                 }
-                
-                // Restart ambient wind audio softly
-                if (audioCtx && windGain) {
-                    windGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                    state.ambientPlaying = true;
-                    const soundBtn = document.getElementById('sound-toggle-btn');
-                    soundBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> <span>播放中</span>';
-                    soundBtn.className = "text-xs text-red-500 hover:text-red-400 transition-colors focus:outline-none flex items-center gap-1.5";
-                }
-
-                showSystemMessage("十盞魂火已在全球同步重新點燃！");
-            } catch (err) {
-                console.error("Failed to reset database candles:", err);
-                showSystemMessage("祭壇重組失敗，請確認你的網路連線狀態。");
+            } else {
+                // Local Mode Reset
+                initDefaultCandles();
             }
+
+            // Restart ambient wind audio softly
+            if (audioCtx && windGain) {
+                windGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                state.ambientPlaying = true;
+                const soundBtn = document.getElementById('sound-toggle-btn');
+                soundBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> <span>播放中</span>';
+                soundBtn.className = "text-xs text-red-500 hover:text-red-400 transition-colors focus:outline-none flex items-center gap-1.5";
+            }
+
+            showSystemMessage("十盞魂火已重新點燃！");
         });
 
         // Initial client loading sequence
         window.onload = function() {
+            // Pre-load local state if firebase configuration is missing
+            if (!useFirebase) {
+                const localData = localStorage.getItem('spooky_candles_data');
+                if (localData) {
+                    try {
+                        state.candles = JSON.parse(localData);
+                    } catch(e) {}
+                }
+            }
             renderCandles();
         };
     </script>
