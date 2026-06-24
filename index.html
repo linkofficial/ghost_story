@@ -23,7 +23,7 @@
             text-shadow: 0 0 10px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.4);
         }
 
-        /* Flickering candle flame animation */
+        /* 蠟燭火焰微弱搖曳物理效果 */
         @keyframes flicker {
             0%, 100% {
                 transform: scale(1) rotate(-1deg);
@@ -52,7 +52,7 @@
             transform-origin: bottom center;
         }
 
-        /* Foggy background animation */
+        /* 迷霧背景動畫 */
         @keyframes fogMove {
             0% { transform: translateX(-10%) translateY(-5%); opacity: 0.15; }
             50% { transform: translateX(10%) translateY(5%); opacity: 0.25; }
@@ -63,7 +63,7 @@
             animation: fogMove 25s infinite linear;
         }
 
-        /* Smoke puff when candle is blown out */
+        /* 吹熄時的煙霧動畫 */
         @keyframes smokeUp {
             0% {
                 transform: translateY(0) scale(1);
@@ -81,7 +81,7 @@
             animation: smokeUp 1.5s forwards ease-out;
         }
 
-        /* Screen shaking for jump-scare (Controlled 5 seconds) */
+        /* 恐怖畫面震顫（控制在5秒內） */
         @keyframes intenseShake {
             0%, 100% { transform: translate(0, 0) rotate(0deg); }
             10% { transform: translate(-10px, -8px) rotate(-3deg); }
@@ -99,6 +99,7 @@
             animation: intenseShake 0.15s infinite;
         }
 
+        /* 螢幕血紅閃爍 */
         @keyframes glitchFlash {
             0%, 100% { background-color: rgba(3,3,3,1); }
             10%, 30%, 50%, 70% { background-color: rgba(127, 29, 29, 0.9); }
@@ -110,13 +111,13 @@
             animation: glitchFlash 0.3s infinite;
         }
 
-        /* Blood dripping styling */
+        /* 滴血字體樣式 */
         .blood-text {
             color: #ef4444;
             text-shadow: 2px 2px 4px #000, 0 0 15px #7f1d1d, 0 0 25px #b91c1c;
         }
 
-        /* Custom scrollbar for eerie look */
+        /* 詭異的滾動條 */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -134,13 +135,13 @@
 </head>
 <body class="text-gray-300 relative min-h-screen select-none overflow-y-auto pb-12">
 
-    <!-- Ambient Fog layer -->
+    <!-- 迷霧背景 -->
     <div class="pointer-events-none fixed inset-0 z-0 bg-gradient-to-b from-neutral-950 via-black to-neutral-950 overflow-hidden">
         <div class="absolute inset-0 bg-cover bg-center mix-blend-color-burn" style="background-image: url('https://placehold.co/1920x1080/0d0d0d/1a1a1a?text=Fog+Texture');"></div>
         <div class="fog-bg absolute -inset-[20%] bg-radial-gradient from-transparent via-neutral-900/40 to-black/80 blur-3xl opacity-30 pointer-events-none"></div>
     </div>
 
-    <!-- SYSTEM TOAST NOTIFICATION -->
+    <!-- 系統通知 (取代彈出視窗) -->
     <div id="system-toast" class="fixed top-4 right-4 z-50 bg-neutral-900/95 border border-red-950 text-red-200 px-4 py-3 rounded-lg shadow-2xl shadow-black/80 backdrop-blur hidden transition-all duration-300 transform translate-y-[-20px] opacity-0 max-w-sm">
         <div class="flex items-center gap-2.5">
             <i class="fa-solid fa-circle-exclamation text-red-500 animate-pulse"></i>
@@ -148,7 +149,7 @@
         </div>
     </div>
 
-    <!-- SOUND WARNING & RITUAL ENTRANCE OVERLAY -->
+    <!-- 儀式起點過場與聲音授權 -->
     <div id="welcome-overlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black transition-opacity duration-1000 p-6 text-center">
         <div class="max-w-md w-full border border-red-900/30 bg-neutral-950/90 rounded-2xl p-8 backdrop-blur shadow-2xl shadow-red-950/50">
             <h1 class="spooky-title text-3xl font-bold text-red-600 mb-6 tracking-widest flex justify-center items-center gap-2">
@@ -158,7 +159,7 @@
             <p class="text-xs text-gray-400 mb-8 leading-relaxed">
                 本留言板包含「高分貝恐怖音效」與「突發驚悚畫面」。<br>
                 請戴上耳機，保持四周昏暗，再啟動儀式。<br>
-                當全球十根蠟燭全部熄滅時，未知的存在將會降臨...
+                當十根蠟燭全部熄滅時，未知的存在將會降臨...
             </p>
             <button id="start-btn" class="w-full bg-red-950 hover:bg-red-800 text-red-200 border border-red-600 font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-red-900/50 transition-all duration-300 transform hover:scale-105 focus:outline-none">
                 點燃祭壇・進入儀式
@@ -166,9 +167,9 @@
         </div>
     </div>
 
-    <!-- MAIN GAME / MESSAGE BOARD LAYOUT -->
+    <!-- 儀式主畫面 -->
     <div class="relative z-10 max-w-6xl mx-auto px-4 pt-8 hidden" id="main-content">
-        <!-- Header -->
+        <!-- 標頭 -->
         <header class="text-center mb-8 relative">
             <h1 class="spooky-title text-4xl md:text-5xl font-extrabold text-red-600 tracking-wider mb-2 flex justify-center items-center gap-3">
                 <span class="text-2xl opacity-75">🕯️</span> 十燭・百物語 <span class="text-2xl opacity-75">🕯️</span>
@@ -178,28 +179,27 @@
                 <span class="text-red-500 font-bold">當十盞火光俱滅，黑暗將吞噬一切。</span>
             </p>
             
-            <!-- Candle Counter -->
+            <!-- 剩餘蠟燭計數器 -->
             <div class="mt-4 inline-block bg-neutral-950/80 border border-neutral-800 rounded-full px-6 py-1.5 text-xs text-neutral-400">
                 剩餘燃燒蠟燭：<span id="candles-left-count" class="text-red-500 font-bold text-base ml-1">10</span> / 10
             </div>
         </header>
 
-        <!-- Candle Stand Section -->
+        <!-- 蠟燭展示台 -->
         <div class="mb-12">
             <div class="relative bg-neutral-950/60 border border-neutral-900/50 rounded-2xl p-6 md:p-10 shadow-inner backdrop-blur-sm">
-                <!-- Spooky table outline top -->
                 <div class="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-neutral-900 to-transparent border-b border-neutral-800"></div>
                 
-                <!-- The 10 Candles Grid -->
+                <!-- 十根蠟燭網格 -->
                 <div class="grid grid-cols-5 gap-y-12 gap-x-2 md:grid-cols-10 md:gap-x-4 justify-items-center items-end min-h-[160px] pb-4 relative z-10">
                     <div id="candle-rack-container" class="contents"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Messages Section -->
+        <!-- 下方區塊：儀式守則與怪談錄 -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Instructions and Ambient Sound Toggle -->
+            <!-- 左側守則與存檔系統 -->
             <div class="lg:col-span-1 bg-neutral-950/80 border border-neutral-900 rounded-xl p-6 h-fit">
                 <h3 class="text-base font-bold text-red-500 border-b border-red-950/50 pb-2 mb-4"><i class="fa-solid fa-scroll mr-2"></i>儀式守則</h3>
                 <ul class="text-[11px] space-y-3.5 text-neutral-400 leading-relaxed">
@@ -213,16 +213,16 @@
                     </li>
                     <li class="flex items-start gap-2">
                         <span class="text-red-500">◆</span>
-                        <span>這是一個多人連線祭壇，各地的陌生人皆在同步吹熄蠟燭...</span>
+                        <span>這是一個獨立儀式，你可以隨時導出與導入目前的怪談存檔。</span>
                     </li>
                 </ul>
 
-                <!-- User ID Block (Discoverability) -->
+                <!-- 玩家識別碼 (靈魂印記) -->
                 <div class="mt-6 pt-6 border-t border-neutral-900">
                     <div class="flex flex-col gap-2">
                         <div class="flex items-center gap-2">
-                            <span id="user-status-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-pulse"></span>
-                            <span id="user-status-text" class="text-xs text-neutral-400 font-bold">靈魂連線中...</span>
+                            <span id="user-status-dot" class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
+                            <span id="user-status-text" class="text-xs text-neutral-400 font-bold">本地祭壇已穩固</span>
                         </div>
                         <div class="bg-neutral-900/30 border border-neutral-900 p-2.5 rounded text-[10px] text-neutral-500 break-all font-mono">
                             <div class="text-neutral-600 font-sans font-semibold mb-0.5">你的靈魂印記 (User ID)：</div>
@@ -231,8 +231,26 @@
                     </div>
                 </div>
 
-                <!-- Sound Controls -->
-                <div class="mt-6 pt-4 border-t border-neutral-900 flex flex-col gap-4">
+                <!-- 💾 儀式存檔傳承面板 -->
+                <div class="mt-6 pt-6 border-t border-neutral-900">
+                    <h4 class="text-xs font-bold text-red-500/80 mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-box-archive text-red-900"></i> <span>儀式存檔傳承</span>
+                    </h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="exportRitual()" class="bg-neutral-900 hover:bg-neutral-800 border border-neutral-850 hover:border-red-950 text-[10px] text-neutral-300 py-2.5 px-1.5 rounded transition-all flex items-center justify-center gap-1 focus:outline-none shadow-md">
+                            <i class="fa-solid fa-file-export text-red-600"></i> 導出儀式
+                        </button>
+                        <button onclick="triggerImportClick()" class="bg-neutral-900 hover:bg-neutral-800 border border-neutral-850 hover:border-red-950 text-[10px] text-neutral-300 py-2.5 px-1.5 rounded transition-all flex items-center justify-center gap-1 focus:outline-none shadow-md">
+                            <i class="fa-solid fa-file-import text-red-600"></i> 導入儀式
+                        </button>
+                    </div>
+                    <!-- 隱藏的檔案選擇器 -->
+                    <input type="file" id="import-file-input" accept=".json,.txt" class="hidden">
+                    <p class="text-[9px] text-neutral-500 mt-2 text-center">可以自由將導出的結晶分享或再次導入本祭壇。</p>
+                </div>
+
+                <!-- 音效控制器 -->
+                <div class="mt-6 pt-4 border-t border-neutral-900 flex flex-col gap-3">
                     <div class="flex items-center justify-between">
                         <span class="text-xs text-neutral-400">環境音效 (陰風呼嘯)</span>
                         <button id="sound-toggle-btn" class="text-xs text-red-500 hover:text-red-400 transition-colors focus:outline-none flex items-center gap-1.5">
@@ -242,10 +260,10 @@
                 </div>
             </div>
 
-            <!-- Real-time Story Wall -->
+            <!-- 右側即時故事留言板 -->
             <div class="lg:col-span-2 flex flex-col bg-neutral-950/80 border border-neutral-900 rounded-xl p-6 min-h-[300px]">
                 <h3 class="text-base font-bold text-red-500 border-b border-red-950/50 pb-2 mb-4 flex items-center justify-between">
-                    <span><i class="fa-solid fa-fire-burner mr-2"></i>全球共鳴・怪談錄</span>
+                    <span><i class="fa-solid fa-fire-burner mr-2"></i>怪談錄・當前印記</span>
                     <span class="text-xs text-neutral-500 font-normal">依時間排序</span>
                 </h3>
 
@@ -255,15 +273,15 @@
                     <p class="text-xs mt-1">點擊上方的蠟燭留下第一個故事...</p>
                 </div>
 
-                <!-- Spooky messages list -->
+                <!-- 怪談卡片列表 -->
                 <div id="stories-board-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 hidden">
-                    <!-- Dynamic stories here -->
+                    <!-- 動態載入 -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- WRITE STORY MODAL -->
+    <!-- 寫故事彈出視窗 -->
     <div id="write-modal" class="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md hidden transition-opacity duration-300">
         <div class="bg-neutral-950 border border-red-900/30 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
             <button onclick="closeModal('write-modal')" class="absolute top-4 right-4 text-neutral-500 hover:text-red-500 text-lg transition-colors focus:outline-none">
@@ -284,7 +302,7 @@
                 </div>
             </div>
 
-            <!-- Error Notification area -->
+            <!-- 錯誤提示區 -->
             <div id="submit-error" class="text-xs text-red-500 mb-3 hidden"></div>
 
             <button id="submit-story-btn" class="w-full bg-red-950 hover:bg-red-900 text-red-200 border border-red-700/50 font-bold py-3 px-4 rounded-lg transition-all flex justify-center items-center gap-2 text-sm">
@@ -293,7 +311,7 @@
         </div>
     </div>
 
-    <!-- READ STORY MODAL -->
+    <!-- 讀故事彈出視窗 -->
     <div id="read-modal" class="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md hidden transition-opacity duration-300">
         <div class="bg-neutral-950 border border-neutral-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
             <button onclick="closeModal('read-modal')" class="absolute top-4 right-4 text-neutral-500 hover:text-red-500 text-lg transition-colors focus:outline-none">
@@ -322,15 +340,15 @@
         </div>
     </div>
 
-    <!-- JUMP SCARE SCREEN -->
+    <!-- 終局恐怖降臨畫面 (JUMP SCARE) -->
     <div id="screamer-container" class="fixed inset-0 z-50 flex-col items-center justify-center bg-black hidden select-none pointer-events-auto">
-        <!-- Flashing overlay (Controlled 5 seconds) -->
+        <!-- 紅黑交替閃爍背景（5秒後自動隱藏） -->
         <div id="screamer-flash-layer" class="absolute inset-0 z-10 screamer-flash-active"></div>
         
-        <!-- Scary graphic content (Controlled 5 seconds shake) -->
+        <!-- 驚悚內容物（5秒後停止震動） -->
         <div id="screamer-shaker" class="relative z-20 flex flex-col items-center justify-center w-full h-full p-4 text-center screamer-shake-active">
             
-            <!-- Scary Monster SVG Graphic (Demon face) -->
+            <!-- 骨魔 SVG 圖騰 -->
             <div class="w-64 h-64 md:w-80 md:h-80 text-red-600 mb-6 drop-shadow-[0_0_35px_rgba(239,68,68,0.9)]">
                 <svg viewBox="0 0 200 200" fill="currentColor" class="w-full h-full">
                     <path d="M100,10 C45,10 20,45 20,90 C20,130 35,160 55,185 C60,190 70,190 75,180 C80,170 85,140 100,140 C115,140 120,170 125,180 C130,190 140,190 145,185 C165,160 180,130 180,90 C180,45 155,10 100,10 Z" fill="#0c0000" />
@@ -351,7 +369,7 @@
                 </svg>
             </div>
 
-            <!-- Terrifying Warning Message -->
+            <!-- 詛咒警示 -->
             <h1 class="blood-text text-3xl md:text-5xl font-black mb-8 tracking-widest leading-normal">
                 你召喚了不該吵醒的存在
             </h1>
@@ -361,10 +379,10 @@
                 祂聽見了你們的故事，並帶走了最後的火光。
             </p>
 
-            <!-- Buttons Layout: Export and Reset -->
+            <!-- 操作面板：導出與重組 -->
             <div class="flex flex-col sm:flex-row gap-4 items-center justify-center w-full max-w-md z-30">
-                <button id="screamer-export-btn" class="w-full sm:w-auto bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 hover:border-red-950/50 text-neutral-400 hover:text-red-400 font-bold py-3 px-8 rounded-lg transition-all duration-300 focus:outline-none text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-file-arrow-down animate-bounce"></i> 導出儀式紀錄 (.txt)
+                <button id="screamer-export-btn" onclick="exportRitual()" class="w-full sm:w-auto bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 hover:border-red-950/50 text-neutral-400 hover:text-red-400 font-bold py-3 px-8 rounded-lg transition-all duration-300 focus:outline-none text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-arrow-down animate-bounce"></i> 導出儀式紀錄 (.json)
                 </button>
                 <button id="screamer-reset-btn" class="w-full sm:w-auto bg-neutral-950 hover:bg-neutral-900 border border-red-800 text-red-500 font-bold py-3 px-8 rounded-lg hover:text-red-400 hover:border-red-500 transition-all duration-300 focus:outline-none text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-rotate-left"></i> 重組祭壇・再次挑戰
@@ -373,13 +391,9 @@
         </div>
     </div>
 
-    <!-- Firebase configuration & Spooky Engine -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global state
+    <!-- 百物語純前端引擎 -->
+    <script>
+        // 儀式全局狀態
         const state = {
             candles: Array.from({ length: 10 }, (_, i) => ({ id: i + 1, isLit: true, story: null, timestamp: null, authorId: null })),
             selectedCandleId: null,
@@ -388,41 +402,17 @@
             hasTriggeredScreamer: false
         };
 
-        // Resilient Firebase config check (Double-mode auto-switch)
-        let firebaseApp = null;
-        let auth = null;
-        let db = null;
-        let useFirebase = false;
-        let appId = 'spooky-candles';
-
-        try {
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                const firebaseConfig = typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
-                firebaseApp = initializeApp(firebaseConfig);
-                auth = getAuth(firebaseApp);
-                db = getFirestore(firebaseApp);
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'spooky-candles';
-                useFirebase = true;
-                console.log("Firebase 雲端連線模組啟動。");
-            } else {
-                console.warn("未偵測到雲端設定，自動轉向：本地安全儀式模式 (Local Storage Mode)。");
-            }
-        } catch (e) {
-            console.error("Firebase 初始化失敗，自動切換至本地模式:", e);
-        }
-
         let currentUser = null;
         let previousLitCount = null;
 
-        // Custom non-intrusive toast alert instead of window.alert()
+        // 自訂非干擾式浮窗提示
         function showSystemMessage(msg) {
             const toast = document.getElementById('system-toast');
             const text = document.getElementById('system-toast-text');
             text.textContent = msg;
             toast.classList.remove('hidden');
             
-            // Force browser layout reflow
-            toast.offsetHeight;
+            toast.offsetHeight; // 強制瀏覽器重繪
             
             toast.classList.remove('translate-y-[-20px]', 'opacity-0');
             toast.classList.add('translate-y-0', 'opacity-100');
@@ -436,59 +426,28 @@
             }, 4200);
         }
 
-        // Initialize Auth system (Priority: Custom token -> Anonymous -> Local mode fallback)
-        async function initAuth() {
-            if (!useFirebase) {
-                setupLocalMode();
-                return;
-            }
-
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth Failed:", error);
-                showSystemMessage("網路連接邊緣失敗，自動切換至本地儀式。");
-                setupLocalMode();
-            }
-        }
-
-        // Setup local mode if Firebase isn't present (Allows copy-paste, double-click local play)
-        function setupLocalMode() {
-            useFirebase = false;
-            const statusDot = document.getElementById('user-status-dot');
-            const statusText = document.getElementById('user-status-text');
+        // 初始化本地使用者印記與狀態
+        function initLocalSession() {
             const connectionId = document.getElementById('user-connection-id');
-
-            statusDot.className = "w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse";
-            statusText.textContent = "本地孤立祭壇已穩固 (Local)";
             
-            // Generate or fetch a unique local persistent key
             let localSoul = localStorage.getItem('spooky_candles_user_uid');
             if (!localSoul) {
                 localSoul = "SOUL_" + Math.random().toString(36).substring(2, 9).toUpperCase();
                 localStorage.setItem('spooky_candles_user_uid', localSoul);
             }
             connectionId.textContent = localSoul;
-            
-            // Register as local current user
             currentUser = { uid: localSoul };
 
-            // Load candles from localStorage
             loadLocalCandles();
         }
 
-        // Load local candles data
+        // 載入本地儲存的蠟燭狀態
         function loadLocalCandles() {
             const localData = localStorage.getItem('spooky_candles_data');
             if (localData) {
                 try {
                     state.candles = JSON.parse(localData);
                 } catch(e) {
-                    console.error("解析本地蠟燭紀錄失敗:", e);
                     initDefaultCandles();
                 }
             } else {
@@ -497,12 +456,10 @@
             renderCandles();
             updateStoriesBoard();
 
-            // Set up initial lit count for state tracking
             const currentLitCount = state.candles.filter(c => c.isLit).length;
             previousLitCount = currentLitCount;
         }
 
-        // Initialize default candles in Local Storage
         function initDefaultCandles() {
             state.candles = Array.from({ length: 10 }, (_, i) => ({
                 id: i + 1,
@@ -514,89 +471,88 @@
             saveLocalCandles();
         }
 
-        // Save candles state locally
         function saveLocalCandles() {
             localStorage.setItem('spooky_candles_data', JSON.stringify(state.candles));
         }
 
-        // Monitor connection auth states for Cloud Mode
-        if (useFirebase && auth) {
-            onAuthStateChanged(auth, (user) => {
-                currentUser = user;
-                const statusDot = document.getElementById('user-status-dot');
-                const statusText = document.getElementById('user-status-text');
-                const connectionId = document.getElementById('user-connection-id');
+        // 導出儀式存檔 (.json)
+        function exportRitual() {
+            try {
+                const now = new Date();
+                const dataStr = JSON.stringify(state.candles, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json;charset=utf-8" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                const dateString = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+                link.download = `十燭百物語-儀式存檔-${dateString}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showSystemMessage("當前儀式因果已成功導出為存檔結晶。");
+            } catch (err) {
+                console.error("Export failed:", err);
+                showSystemMessage("導出儀式失敗，請檢查權限。");
+            }
+        }
+        window.exportRitual = exportRitual;
 
-                if (user) {
-                    statusDot.className = "w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse";
-                    statusText.textContent = "全球連線祭壇已穩固 (Cloud)";
-                    connectionId.textContent = user.uid;
+        // 觸發隱藏的檔案選擇器
+        function triggerImportClick() {
+            document.getElementById('import-file-input').click();
+        }
+        window.triggerImportClick = triggerImportClick;
+
+        // 處理導入檔案
+        document.getElementById('import-file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const importedData = JSON.parse(evt.target.result);
                     
-                    // Begin listening to real-time database
-                    startCandleSync();
-                } else {
-                    statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse";
-                    statusText.textContent = "與陰陽邊界失聯";
-                    connectionId.textContent = "未連線";
-                }
-            });
-        }
-
-        // Sync Firestore Candles Real-time
-        function startCandleSync() {
-            if (!currentUser || !useFirebase) return;
-
-            const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'candle_stories');
-            
-            onSnapshot(collectionRef, (snapshot) => {
-                const syncedCandles = Array.from({ length: 10 }, (_, i) => ({
-                    id: i + 1,
-                    isLit: true,
-                    story: null,
-                    timestamp: null,
-                    authorId: null
-                }));
-
-                snapshot.forEach((doc) => {
-                    const id = parseInt(doc.id);
-                    const data = doc.data();
-                    if (id >= 1 && id <= 10) {
-                        syncedCandles[id - 1] = {
-                            id: id,
-                            isLit: data.isLit !== undefined ? data.isLit : true,
-                            story: data.story || null,
-                            timestamp: data.timestamp || null,
-                            authorId: data.authorId || null
-                        };
+                    // 驗證導入的結構是否正確
+                    if (!Array.isArray(importedData) || importedData.length !== 10) {
+                        throw new Error("存檔結構不符，必須包含十根蠟燭。");
                     }
-                });
 
-                state.candles = syncedCandles;
-                
-                // Draw UI dynamically
-                renderCandles();
-                updateStoriesBoard();
+                    for (let i = 0; i < 10; i++) {
+                        const candle = importedData[i];
+                        if (typeof candle.id !== 'number' || typeof candle.isLit !== 'boolean') {
+                            throw new Error(`第 ${i+1} 根蠟燭數據損壞。`);
+                        }
+                    }
 
-                const currentLitCount = syncedCandles.filter(c => c.isLit).length;
+                    // 更新並存入本地
+                    state.candles = importedData;
+                    saveLocalCandles();
+                    renderCandles();
+                    updateStoriesBoard();
+                    
+                    const litCount = state.candles.filter(c => c.isLit).length;
+                    previousLitCount = litCount;
 
-                // Jump scare trigger conditions
-                const isMainContentVisible = !document.getElementById('main-content').classList.contains('hidden');
-                
-                if (previousLitCount !== null && previousLitCount > 0 && currentLitCount === 0 && !state.hasTriggeredScreamer && isMainContentVisible) {
-                    state.hasTriggeredScreamer = true;
-                    setTimeout(triggerJumpScare, 1200);
+                    // 檢查是否十根均熄滅
+                    if (litCount === 0) {
+                        state.hasTriggeredScreamer = true;
+                        showSystemMessage("導入成功！十盞火光已全熄，深淵即刻降臨...");
+                        setTimeout(triggerJumpScare, 1200);
+                    } else {
+                        state.hasTriggeredScreamer = false;
+                        showSystemMessage("過往的儀式記憶已成功導入，祭壇重新甦醒。");
+                    }
+                } catch (err) {
+                    console.error("Import failed:", err);
+                    showSystemMessage("導入失敗：此檔案非有效的儀式存檔。");
                 }
+                // 重設 value 讓同檔名可以重複上傳觸發
+                e.target.value = '';
+            };
+            reader.readAsText(file);
+        });
 
-                previousLitCount = currentLitCount;
-
-            }, (error) => {
-                console.error("Firestore synchronizer failed:", error);
-                showSystemMessage("無法讀取遠端魂火，自動轉為本地模式。");
-                setupLocalMode();
-            });
-        }
-
-        // Web Audio Synthesizer Engine
+        // Web Audio API 擬真陰風音效合成器
         let audioCtx = null;
         let windNode = null;
         let windGain = null;
@@ -648,7 +604,7 @@
                 modulateWind();
 
             } catch (err) {
-                console.warn("Web Audio API not supported:", err);
+                console.warn("瀏覽器不支援 Web Audio API:", err);
             }
         }
 
@@ -753,11 +709,11 @@
                 noiseScreamer.stop(now + 2.5);
 
             } catch (e) {
-                console.warn("Screamer audio trigger failed:", e);
+                console.warn("音效啟動失敗:", e);
             }
         }
 
-        // Render Candles Graphic Elements
+        // 繪製蠟燭外觀與搖曳特效
         function renderCandles() {
             const container = document.getElementById('candle-rack-container');
             container.innerHTML = '';
@@ -768,9 +724,8 @@
                 candleEl.setAttribute('onclick', `handleCandleClick(${candle.id})`);
                 
                 candleEl.innerHTML = `
-                    <!-- Candle Flame & Smoke -->
                     <div class="h-12 w-full flex justify-center items-end relative">
-                        <!-- Flame -->
+                        <!-- 火焰 -->
                         <div id="flame-${candle.id}" class="w-4 h-8 ${candle.isLit ? 'flame-active' : 'hidden'} absolute bottom-0">
                             <svg viewBox="0 0 100 200" fill="none" class="w-full h-full">
                                 <defs>
@@ -784,7 +739,7 @@
                                 <path d="M50,0 C80,80 90,120 80,160 C70,190 30,190 20,160 C10,120 20,80 50,0 Z" fill="url(#flame-grad-${candle.id})" />
                             </svg>
                         </div>
-                        <!-- Smoke puff when blown out -->
+                        <!-- 白煙擴散 -->
                         <div id="smoke-${candle.id}" class="w-6 h-6 bg-transparent border-none rounded-full absolute bottom-2 hidden">
                             <svg viewBox="0 0 100 100" class="w-full h-full text-neutral-500 smoke-puff opacity-0">
                                 <path d="M50,80 Q20,50 30,30 Q45,10 60,30 Q80,50 50,80" fill="currentColor" />
@@ -792,31 +747,29 @@
                         </div>
                     </div>
                     
-                    <!-- Wax Body -->
+                    <!-- 蠟燭本體 -->
                     <div class="relative w-6 h-16 md:w-8 md:h-20 bg-gradient-to-r ${candle.isLit ? 'from-red-700 via-red-600 to-red-800 shadow-[0_0_10px_rgba(239,68,68,0.3)]' : 'from-neutral-900 via-neutral-800 to-neutral-950'} rounded-t-sm rounded-b-md transition-all duration-500">
                         <div class="absolute top-1 left-1.5 w-1.5 h-6 bg-red-900/40 rounded-full ${candle.isLit ? '' : 'hidden'}"></div>
                         <div class="absolute top-3 right-2 w-1 h-8 bg-red-900/30 rounded-full ${candle.isLit ? '' : 'hidden'}"></div>
                         <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-0.5 h-2 bg-neutral-700"></div>
                         
-                        <!-- Mini Identifier Number -->
                         <div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold ${candle.isLit ? 'text-red-300/40' : 'text-neutral-700'}">
                             ${candle.id}
                         </div>
                     </div>
                     
-                    <!-- Candle Base Stand -->
+                    <!-- 底座 -->
                     <div class="w-8 h-2 md:w-11 bg-neutral-900 border-t border-neutral-700 rounded-full -mt-0.5"></div>
                 `;
                 
                 container.appendChild(candleEl);
             });
 
-            // Update remaining candles tracker
             const litCount = state.candles.filter(c => c.isLit).length;
             document.getElementById('candles-left-count').textContent = litCount;
         }
 
-        // Handle Candle Clicks (Exposed globally)
+        // 點擊蠟燭事件
         function handleCandleClick(id) {
             const candle = state.candles.find(c => c.id === id);
             if (!candle) return;
@@ -838,7 +791,6 @@
         }
         window.handleCandleClick = handleCandleClick;
 
-        // Modal triggers
         function openModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.remove('hidden');
@@ -856,16 +808,16 @@
         }
         window.closeModal = closeModal;
 
-        // Live text constraint counter
+        // 字數統計監聽
         document.getElementById('story-textarea').addEventListener('input', function() {
             const len = this.value.length;
             document.getElementById('char-count').textContent = len;
         });
 
-        // Submit story handler (Dual-mode write safety)
-        document.getElementById('submit-story-btn').addEventListener('click', async function() {
+        // 提交故事
+        document.getElementById('submit-story-btn').addEventListener('click', function() {
             if (!currentUser) {
-                showSystemMessage("儀式印記不穩定，無法提交。請重試。");
+                showSystemMessage("儀式印記未建立，無法封印。請重新整理。");
                 return;
             }
 
@@ -879,7 +831,7 @@
             }
 
             if (storyText.length < 10) {
-                errorDiv.textContent = '「儀式警告：故事太過敷衍，無法飽足黑暗。」（至少 10 個字）';
+                errorDiv.textContent = '「儀式警告：故事太過簡短，無法飽足黑暗。」（至少 10 個字）';
                 errorDiv.classList.remove('hidden');
                 return;
             }
@@ -887,53 +839,36 @@
             const candleId = state.selectedCandleId;
             closeModal('write-modal');
 
-            // Quick offline feedback first
+            // 本地動畫與音效反饋
             playBlowoutSound();
             triggerSmokePuff(candleId);
 
             const now = new Date();
             const formattedTime = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
-            if (useFirebase) {
-                // Write to Firestore
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'candle_stories', candleId.toString());
-                    await setDoc(docRef, {
-                        isLit: false,
-                        story: storyText,
-                        timestamp: formattedTime,
-                        authorId: currentUser.uid
-                    });
-                    showSystemMessage(`第 ${candleId} 根蠟燭已被吹熄，怪談成功封印至雲端。`);
-                } catch (err) {
-                    console.error("Story commit to cloud database failed:", err);
-                    showSystemMessage("寫入魂魄深淵時失敗，請重試。");
-                }
-            } else {
-                // Write to Local Storage State
-                state.candles[candleId - 1] = {
-                    id: candleId,
-                    isLit: false,
-                    story: storyText,
-                    timestamp: formattedTime,
-                    authorId: currentUser.uid
-                };
-                saveLocalCandles();
-                renderCandles();
-                updateStoriesBoard();
-                showSystemMessage(`第 ${candleId} 根蠟燭已被吹熄，怪談封印已存在本地儀式中。`);
+            // 寫入本地存檔
+            state.candles[candleId - 1] = {
+                id: candleId,
+                isLit: false,
+                story: storyText,
+                timestamp: formattedTime,
+                authorId: currentUser.uid
+            };
+            
+            saveLocalCandles();
+            renderCandles();
+            updateStoriesBoard();
+            
+            showSystemMessage(`第 ${candleId} 根蠟燭已被吹熄，怪談已記錄。`);
 
-                // Check local jumpscare trigger
-                const currentLitCount = state.candles.filter(c => c.isLit).length;
-                if (previousLitCount > 0 && currentLitCount === 0 && !state.hasTriggeredScreamer) {
-                    state.hasTriggeredScreamer = true;
-                    setTimeout(triggerJumpScare, 1200);
-                }
-                previousLitCount = currentLitCount;
+            const currentLitCount = state.candles.filter(c => c.isLit).length;
+            if (previousLitCount > 0 && currentLitCount === 0 && !state.hasTriggeredScreamer) {
+                state.hasTriggeredScreamer = true;
+                setTimeout(triggerJumpScare, 1200);
             }
+            previousLitCount = currentLitCount;
         });
 
-        // Smoke puff puff puff helper
         function triggerSmokePuff(candleId) {
             const smokeContainer = document.getElementById(`smoke-${candleId}`);
             if (smokeContainer) {
@@ -949,7 +884,7 @@
             }
         }
 
-        // Draw Stories Board List dynamically from synced state
+        // 動態重繪故事卡片列表
         function updateStoriesBoard() {
             const board = document.getElementById('stories-board-list');
             const placeholder = document.getElementById('no-story-placeholder');
@@ -988,7 +923,7 @@
             });
         }
 
-        // Trigger Jump Scare (Terminates shaking exactly after 5 seconds!)
+        // 啟動恐怖暴走 (震顫與閃爍5秒後精確平息！)
         function triggerJumpScare() {
             if (windGain) {
                 windGain.gain.setValueAtTime(0, audioCtx.currentTime);
@@ -1001,10 +936,8 @@
             screamer.classList.remove('hidden');
             screamer.classList.add('flex');
 
-            // Play loud terror sound
             playScreamerSound();
 
-            // Set intense shake classes
             shaker.classList.add('screamer-shake-active');
             flasher.classList.add('screamer-flash-active');
             document.body.classList.add('screamer-shake-active');
@@ -1013,17 +946,17 @@
                 navigator.vibrate([100, 50, 100, 50, 400, 100, 500]);
             }
 
-            // [FIX] Terminate intense shaking exactly after 5000ms (5 seconds)
+            // 5秒鐘一到，全面熄滅震動與背景閃爍，保留猙獰畫面與乾淨按鈕
             setTimeout(() => {
                 shaker.classList.remove('screamer-shake-active');
                 flasher.classList.remove('screamer-flash-active');
-                flasher.classList.add('hidden'); // Disable background flickering completely
+                flasher.classList.add('hidden'); 
                 document.body.classList.remove('screamer-shake-active');
-                showSystemMessage("震動與閃爍已平息，你可以安全操作重組祭壇。");
+                showSystemMessage("震顫與閃光已平息。祂正凝視著你，你可以安全執行導出。");
             }, 5000);
         }
 
-        // Sound Toggler
+        // 音效控制切換
         document.getElementById('sound-toggle-btn').addEventListener('click', function() {
             if (!audioCtx) {
                 initAudio();
@@ -1045,10 +978,10 @@
             }
         });
 
-        // Start ritual entry point
+        // 進入儀式按鈕
         document.getElementById('start-btn').addEventListener('click', function() {
             initAudio();
-            initAuth();
+            initLocalSession();
             
             const overlay = document.getElementById('welcome-overlay');
             overlay.classList.add('opacity-0');
@@ -1059,95 +992,27 @@
             }, 1000);
         });
 
-        // Export Ritual Records to TXT File
-        document.getElementById('screamer-export-btn').addEventListener('click', function() {
-            try {
-                const now = new Date();
-                const timestampStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-                
-                let fileContent = `==================================================\n`;
-                fileContent += `         🕯️ 十燭・百物語 儀式怪談紀錄簿 🕯️\n`;
-                fileContent += `==================================================\n`;
-                fileContent += `末日降臨時刻：${timestampStr}\n`;
-                fileContent += `本檔案由召喚深淵的倖存靈魂導出。\n`;
-                fileContent += `十個在黑夜中寂滅的故事，已被永恆封印於此。\n`;
-                fileContent += `==================================================\n\n`;
-
-                state.candles.forEach(candle => {
-                    fileContent += `🕯️ 【第 ${candle.id} 盞火光 - 熄滅怪談】\n`;
-                    fileContent += `--------------------------------------------------\n`;
-                    if (candle.story) {
-                        fileContent += `${candle.story}\n\n`;
-                        fileContent += `封印時刻：${candle.timestamp || "未知"}\n`;
-                        fileContent += `靈魂印記：${candle.authorId || "古老的不明之魂"}\n`;
-                    } else {
-                        fileContent += `（未記錄到故事。火光無故熄滅...）\n`;
-                    }
-                    fileContent += `--------------------------------------------------\n\n`;
-                });
-
-                fileContent += `==================================================\n`;
-                fileContent += `「當十盞火光俱滅，黑暗將吞噬一切。祂，已經醒來了。」\n`;
-                fileContent += `==================================================\n`;
-
-                const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = `十燭百物語-儀式怪談紀錄-${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}.txt`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                showSystemMessage("儀式紀錄已封裝並導出至您的裝置。");
-            } catch (err) {
-                console.error("Export failed:", err);
-                showSystemMessage("導出祭壇紀錄失敗，請檢查網頁權限。");
-            }
-        });
-
-        // Cloud Altar Rebuilding (Resets all candle docs in cloud!)
-        document.getElementById('screamer-reset-btn').addEventListener('click', async function() {
+        // 重置儀式 (重燃十盞火光)
+        document.getElementById('screamer-reset-btn').addEventListener('click', function() {
             if (!currentUser) {
                 showSystemMessage("重置儀式時未與靈魂連線。");
                 return;
             }
 
-            // Disable jump scare state internally
             state.hasTriggeredScreamer = false;
             previousLitCount = null;
 
-            // Hide Screamer screens
             const screamer = document.getElementById('screamer-container');
             const flasher = document.getElementById('screamer-flash-layer');
             screamer.classList.add('hidden');
             screamer.classList.remove('flex');
-            flasher.classList.remove('hidden'); // Restore flasher for next potential trigger
+            flasher.classList.remove('hidden'); 
 
-            showSystemMessage("正在向深淵重組祭壇，請稍候...");
+            showSystemMessage("正在重組祭壇，請稍候...");
 
-            if (useFirebase) {
-                try {
-                    // Wipe states in firestore (Loop 1-10 sequentially)
-                    for (let i = 1; i <= 10; i++) {
-                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'candle_stories', i.toString());
-                        await setDoc(docRef, {
-                            isLit: true,
-                            story: null,
-                            timestamp: null,
-                            authorId: null
-                        });
-                    }
-                } catch (err) {
-                    console.error("Failed to reset database candles:", err);
-                    showSystemMessage("雲端祭壇重組失敗，請確認連線。");
-                    return;
-                }
-            } else {
-                // Local Mode Reset
-                initDefaultCandles();
-            }
+            // 本地重設
+            initDefaultCandles();
 
-            // Restart ambient wind audio softly
             if (audioCtx && windGain) {
                 windGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
                 state.ambientPlaying = true;
@@ -1159,17 +1024,8 @@
             showSystemMessage("十盞魂火已重新點燃！");
         });
 
-        // Initial client loading sequence
+        // 初始加載
         window.onload = function() {
-            // Pre-load local state if firebase configuration is missing
-            if (!useFirebase) {
-                const localData = localStorage.getItem('spooky_candles_data');
-                if (localData) {
-                    try {
-                        state.candles = JSON.parse(localData);
-                    } catch(e) {}
-                }
-            }
             renderCandles();
         };
     </script>
